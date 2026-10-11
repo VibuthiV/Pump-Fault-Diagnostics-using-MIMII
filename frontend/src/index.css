@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
 @layer base {
@@ -157,8 +158,9 @@ body {
 body {
   background: var(--surface-muted);
   color: var(--ink);
-  font-family: "Aptos", "Candara", "Trebuchet MS", sans-serif;
-  letter-spacing: 0.005em;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.002em;
 }
 
 .app-shell {
@@ -322,9 +324,28 @@ body {
 .app-main h3,
 .app-main h4,
 .app-header h1 {
-  font-family: "Aptos Display", "Aptos", "Candara", sans-serif;
+  font-family: "Space Grotesk", "Manrope", sans-serif;
   letter-spacing: -0.01em;
 }
+
+.app-main h2 { font-size: 1.85rem; line-height: 1.15; }
+.app-main h3 { font-size: 1rem; line-height: 1.3; }
+.app-main h4 { font-size: 0.95rem; }
+
+/* Lift the small utility labels without making tables feel oversized. */
+.app-main [class~="text-xs"] { font-size: 0.82rem; line-height: 1.45; }
+.app-main [class~="text-[11px]"] { font-size: 0.75rem; line-height: 1.4; }
+.app-main [class~="text-[10px]"] { font-size: 0.68rem; line-height: 1.35; }
+.app-main table { font-size: 0.88rem; }
+.app-main button,
+.app-main select,
+.app-main input { font-size: 0.88rem; }
+
+.overview-hero h2 { font-size: clamp(2rem, 3.2vw, 2.8rem); }
+.overview-hero p { font-size: 1rem; line-height: 1.7; }
+.metric-grid .text-2xl { font-size: 1.8rem; }
+.app-header h1 { font-size: 1.05rem; }
+.app-header p { font-size: 0.78rem; }
 
 .eyebrow {
   color: #2563eb;

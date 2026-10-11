@@ -18,7 +18,11 @@ def get_health():
     gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
 
     dataset_root = settings.get_dataset_root()
-    manifest_exists = (dataset_root / "manifest.csv").exists() or (Path("manifest.csv").exists())
+    manifest_exists = (
+        (dataset_root / "manifest.csv").exists()
+        or any(dataset_root.rglob("manifest.csv"))
+        or Path("manifest.csv").exists()
+    )
     checkpoint_exists = settings.get_checkpoint_path().exists() or Path("spec_only_checkpoint").exists() or Path("spec_only_checkpoint.pt").exists()
     groq_key_configured = bool(settings.groq_api_key and settings.groq_api_key.strip())
 

@@ -302,14 +302,14 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
             {rocData?.available && rocData.points.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={rocData.points} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="fpr" type="number" domain={[0, 1]} stroke="#64748b" fontSize={10} />
-                  <YAxis dataKey="tpr" type="number" domain={[0, 1]} stroke="#64748b" fontSize={10} />
+                  <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="fpr" type="number" domain={[0, 1]} stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis dataKey="tpr" type="number" domain={[0, 1]} stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px' }}
+                    contentStyle={{ backgroundColor: '#ffffff', borderColor: '#dbe3ef', borderRadius: '10px', fontSize: '11px', boxShadow: '0 8px 24px rgba(15,23,42,.12)' }}
                   />
-                  <Line type="monotone" dataKey="tpr" stroke="#3b82f6" strokeWidth={2} dot={false} name="SpecOnly Model" />
-                  <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 1, y: 1 }]} stroke="#64748b" strokeDasharray="4 4" />
+                  <Line type="monotone" dataKey="tpr" stroke="#2563eb" strokeWidth={3} dot={false} name="SpecOnly Model" />
+                  <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 1, y: 1 }]} stroke="#cbd5e1" strokeDasharray="4 4" />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -331,13 +331,13 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
             {prData?.available && prData.points.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={prData.points} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="recall" type="number" domain={[0, 1]} stroke="#64748b" fontSize={10} />
-                  <YAxis dataKey="precision" type="number" domain={[0, 1]} stroke="#64748b" fontSize={10} />
+                  <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="recall" type="number" domain={[0, 1]} stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis dataKey="precision" type="number" domain={[0, 1]} stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px' }}
+                    contentStyle={{ backgroundColor: '#ffffff', borderColor: '#dbe3ef', borderRadius: '10px', fontSize: '11px', boxShadow: '0 8px 24px rgba(15,23,42,.12)' }}
                   />
-                  <Line type="monotone" dataKey="precision" stroke="#06b6d4" strokeWidth={2} dot={false} name="Precision" />
+                  <Line type="monotone" dataKey="precision" stroke="#0f766e" strokeWidth={3} dot={false} name="Precision" />
                 </LineChart>
               </ResponsiveContainer>
             ) : (

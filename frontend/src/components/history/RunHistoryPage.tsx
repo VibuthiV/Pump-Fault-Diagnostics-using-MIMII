@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { RunStatus } from '../../types';
-import { fetchRuns, compareRuns } from '../../services/api';
-import { X, GitCompare } from 'lucide-react';
+import { deleteRun, fetchRuns } from '../../services/api';
+import { CheckSquare, Trash2 } from 'lucide-react';
 
 interface RunHistoryPageProps {
   onSelectRun: (runId: string) => void;
@@ -11,228 +11,120 @@ export const RunHistoryPage: React.FC<RunHistoryPageProps> = ({ onSelectRun }) =
   const [loading, setLoading] = useState(true);
   const [runs, setRuns] = useState<RunStatus[]>([]);
   const [selectedRunIds, setSelectedRunIds] = useState<string[]>([]);
-  const [comparisonResult, setComparisonResult] = useState<any | null>(null);
-
-  useEffect(() => {
-    loadHistory();
-  }, []);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadHistory = async () => {
     setLoading(true);
     try {
-      const data = await fetchRuns();
-      setRuns(data);
-    } catch (err) {
-      console.error(err);
+      setRuns(await fetchRuns());
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load run history');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
   const toggleSelectRun = (runId: string) => {
-    if (selectedRunIds.includes(runId)) {
-      setSelectedRunIds(selectedRunIds.filter((id) => id !== runId));
-    } else {
-      if (selectedRunIds.length >= 4) return;
-      setSelectedRunIds([...selectedRunIds, runId]);
+    setSelectedRunIds((current) => current.includes(runId)
+      ? current.filter((id) => id !== runId)
+      : [...current, runId]);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedRunIds.length || deleting) return;
+    if (!window.confirm(`Delete ${selectedRunIds.length} selected run${selectedRunIds.length === 1 ? '' : 's'} and its artifacts?`)) return;
+
+    setDeleting(true);
+    try {
+      for (const runId of selectedRunIds) await deleteRun(runId);
+      setSelectedRunIds([]);
+      await loadHistory();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete selected runs');
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const handleCompare = async () => {
-    if (selectedRunIds.length < 2) return;
-    try {
-      const res = await compareRuns(selectedRunIds);
-      setComparisonResult(res.comparison);
-    } catch (err) {
-      console.error(err);
-    }
+  const toggleAll = () => {
+    setSelectedRunIds(selectedRunIds.length === runs.length ? [] : runs.map((run) => run.run_id));
   };
 
   return (
     <div className="space-y-6">
-      
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="page-heading flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Run History & Experiment Comparison
-          </h2>
-          <p className="text-xs text-slate-400">
-            Persistent log of completed, active, and past model evaluation runs
-          </p>
+          <p className="eyebrow">Operations</p>
+          <h2 className="text-2xl font-bold">Run history</h2>
+          <p className="text-sm text-slate-500 mt-1">Review past evaluations and remove runs you no longer need.</p>
         </div>
-
-        {selectedRunIds.length >= 2 && (
-          <button
-            onClick={handleCompare}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white px-4 py-2 text-xs font-semibold shadow-lg transition-all"
-          >
-            <GitCompare className="h-4 w-4" />
-            Compare Selected Runs ({selectedRunIds.length})
-          </button>
-        )}
+        <button
+          onClick={handleDelete}
+          disabled={!selectedRunIds.length || deleting}
+          className="history-delete inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Trash2 className="h-4 w-4" />
+          {deleting ? 'Deleting...' : `Delete selected${selectedRunIds.length ? ` (${selectedRunIds.length})` : ''}`}
+        </button>
       </div>
 
-      {/* History Table */}
-      <div className="glass-card overflow-hidden border border-slate-800">
+      {error && <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+
+      <div className="glass-card overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <CheckSquare className="h-4 w-4 text-blue-600" />
+            Evaluation runs
+          </div>
+          <button onClick={toggleAll} className="text-xs font-semibold text-blue-600 hover:text-blue-800">
+            {selectedRunIds.length === runs.length && runs.length ? 'Clear selection' : 'Select all'}
+          </button>
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="p-3.5 w-10 text-center">Compare</th>
-                <th className="p-3.5">Run ID</th>
-                <th className="p-3.5">Date / Time</th>
-                <th className="p-3.5">Mode</th>
-                <th className="p-3.5">Split</th>
-                <th className="p-3.5">ROC-AUC</th>
-                <th className="p-3.5">Accuracy</th>
-                <th className="p-3.5">Status</th>
-                <th className="p-3.5 text-right">Action</th>
+                <th className="px-5 py-3 w-12" aria-label="Select" />
+                <th className="px-5 py-3">Run</th>
+                <th className="px-5 py-3">Created</th>
+                <th className="px-5 py-3">Mode</th>
+                <th className="px-5 py-3">Split</th>
+                <th className="px-5 py-3">ROC-AUC</th>
+                <th className="px-5 py-3">Accuracy</th>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3 text-right">View</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-900">
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={9} className="p-8 text-center text-slate-500">Loading history...</td>
-                </tr>
+                <tr><td colSpan={9} className="px-5 py-12 text-center text-slate-500">Loading run history...</td></tr>
               ) : runs.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="p-8 text-center text-slate-500">No past runs found in database.</td>
+                <tr><td colSpan={9} className="px-5 py-12 text-center text-slate-500">No evaluation runs found.</td></tr>
+              ) : runs.map((run) => (
+                <tr key={run.run_id} className="history-row">
+                  <td className="px-5 py-4">
+                    <input type="checkbox" checked={selectedRunIds.includes(run.run_id)} onChange={() => toggleSelectRun(run.run_id)} className="h-4 w-4 accent-blue-600" />
+                  </td>
+                  <td className="px-5 py-4 font-mono text-xs font-semibold text-slate-700">{run.run_id}</td>
+                  <td className="px-5 py-4 text-slate-500">{run.created_at}</td>
+                  <td className="px-5 py-4 text-xs font-semibold uppercase text-blue-700">{run.execution_mode}</td>
+                  <td className="px-5 py-4 text-xs uppercase text-slate-600">{run.dataset_split}</td>
+                  <td className="px-5 py-4 font-mono font-semibold text-slate-700">{run.metrics?.auc != null ? run.metrics.auc.toFixed(4) : 'N/A'}</td>
+                  <td className="px-5 py-4 font-mono font-semibold text-slate-700">{run.metrics?.accuracy != null ? `${(run.metrics.accuracy * 100).toFixed(2)}%` : 'N/A'}</td>
+                  <td className="px-5 py-4"><span className={`run-status run-status-${run.status.toLowerCase()}`}>{run.status}</span></td>
+                  <td className="px-5 py-4 text-right"><button onClick={() => onSelectRun(run.run_id)} className="font-semibold text-blue-600 hover:text-blue-800">Inspect</button></td>
                 </tr>
-              ) : (
-                runs.map((r) => (
-                  <tr key={r.run_id} className="hover:bg-slate-900/60 transition-all">
-                    <td className="p-3.5 text-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedRunIds.includes(r.run_id)}
-                        onChange={() => toggleSelectRun(r.run_id)}
-                        className="accent-blue-500 h-4 w-4 rounded"
-                      />
-                    </td>
-                    <td className="p-3.5 font-mono font-bold text-white">{r.run_id}</td>
-                    <td className="p-3.5 text-slate-400">{r.created_at}</td>
-                    <td className="p-3.5 font-semibold text-blue-400 uppercase">{r.execution_mode}</td>
-                    <td className="p-3.5 text-slate-300 uppercase">{r.dataset_split}</td>
-                    <td className="p-3.5 font-mono font-bold text-blue-400">
-                      {r.metrics?.auc !== undefined && r.metrics?.auc !== null ? r.metrics.auc.toFixed(4) : 'N/A'}
-                    </td>
-                    <td className="p-3.5 font-mono font-bold text-emerald-400">
-                      {r.metrics?.accuracy ? `${(r.metrics.accuracy * 100).toFixed(2)}%` : 'N/A'}
-                    </td>
-                    <td className="p-3.5">
-                      <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-semibold ${
-                        r.status === 'COMPLETED'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : r.status === 'RUNNING'
-                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      }`}>
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => onSelectRun(r.run_id)}
-                        className="text-xs font-semibold text-blue-400 hover:text-blue-300"
-                      >
-                        Inspect →
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>
       </div>
-
-      {/* Side-by-Side Comparison Modal */}
-      {comparisonResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-          <div className="glass-card w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                Side-by-Side Experiment Comparison
-              </h3>
-              <button onClick={() => setComparisonResult(null)} className="text-slate-400 hover:text-white">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-800 text-slate-400">
-                    <th className="p-3">Metric / Field</th>
-                    {comparisonResult.map((c: any) => (
-                      <th key={c.run_id} className="p-3 text-white font-mono font-bold">{c.run_id}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-900">
-                  <tr>
-                    <td className="p-3 text-slate-400">Execution Mode</td>
-                    {comparisonResult.map((c: any) => (
-                      <td key={c.run_id} className="p-3 font-semibold uppercase text-blue-400">{c.execution_mode}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="p-3 text-slate-400">ROC-AUC</td>
-                    {comparisonResult.map((c: any) => (
-                      <td key={c.run_id} className="p-3 font-mono font-bold text-blue-400">
-                        {c.metrics?.auc !== null && c.metrics?.auc !== undefined ? c.metrics.auc.toFixed(4) : 'N/A'}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="p-3 text-slate-400">Accuracy</td>
-                    {comparisonResult.map((c: any) => (
-                      <td key={c.run_id} className="p-3 font-mono font-bold text-emerald-400">
-                        {c.metrics?.accuracy ? `${(c.metrics.accuracy * 100).toFixed(2)}%` : 'N/A'}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="p-3 text-slate-400">Precision</td>
-                    {comparisonResult.map((c: any) => (
-                      <td key={c.run_id} className="p-3 font-mono text-cyan-400">
-                        {c.metrics?.precision ? c.metrics.precision.toFixed(4) : 'N/A'}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="p-3 text-slate-400">Recall</td>
-                    {comparisonResult.map((c: any) => (
-                      <td key={c.run_id} className="p-3 font-mono text-purple-400">
-                        {c.metrics?.recall ? c.metrics.recall.toFixed(4) : 'N/A'}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="p-3 text-slate-400">F1 Score</td>
-                    {comparisonResult.map((c: any) => (
-                      <td key={c.run_id} className="p-3 font-mono text-amber-400">
-                        {c.metrics?.f1_score ? c.metrics.f1_score.toFixed(4) : 'N/A'}
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setComparisonResult(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white rounded-xl"
-              >
-                Close Comparison
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };

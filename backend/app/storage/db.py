@@ -106,3 +106,11 @@ def list_run_records(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
             item["config"] = json.loads(item["config_json"])
         result.append(item)
     return result
+
+
+def delete_run_record(run_id: str) -> bool:
+    conn = get_db_connection()
+    with conn:
+        cursor = conn.execute("DELETE FROM runs WHERE run_id = ?", (run_id,))
+    conn.close()
+    return cursor.rowcount > 0

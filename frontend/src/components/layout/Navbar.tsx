@@ -1,6 +1,6 @@
 import React from 'react';
 import type { HealthData, RunStatus } from '../../types';
-import { Activity, Cpu, Database, AlertCircle, PlayCircle, BarChart3, FileText, History } from 'lucide-react';
+import { Activity, AudioWaveform, Cpu, Database, AlertCircle, PlayCircle, BarChart3, FileText, History } from 'lucide-react';
 
 interface NavbarProps {
   health: HealthData | null;
@@ -26,7 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand */}
         <div className="brand flex items-center gap-3 cursor-pointer" onClick={() => onSelectTab('overview')}>
           <div className="brand-mark flex h-10 w-10 items-center justify-center rounded-xl text-white">
-            <Activity className="h-6 w-6" />
+            <AudioWaveform className="h-6 w-6" strokeWidth={1.8} />
           </div>
           <div>
             <h1 className="text-base font-bold tracking-tight flex items-center gap-2">

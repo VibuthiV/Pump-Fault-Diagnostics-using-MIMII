@@ -47,6 +47,14 @@ export async function fetchRuns(): Promise<RunStatus[]> {
   return res.json();
 }
 
+export async function deleteRun(runId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/runs/${runId}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to delete run');
+  }
+}
+
 export async function fetchRun(runId: string): Promise<RunStatus> {
   const res = await fetch(`${API_BASE}/runs/${runId}`);
   if (!res.ok) throw new Error(`Failed to fetch run ${runId}`);

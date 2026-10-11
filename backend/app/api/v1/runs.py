@@ -3,6 +3,7 @@ Runs Management API Router.
 Provides validation, explicit creation, history listing, SSE progress streaming, and cancellation.
 """
 import asyncio
+import shutil
 import time
 from pathlib import Path
 from typing import List, Optional
@@ -16,7 +17,7 @@ from app.schemas.pipeline import (
 )
 from app.pipeline.dataset import load_manifest, validate_manifest
 from app.jobs.manager import job_manager
-from app.storage.db import get_run_record, list_run_records
+from app.storage.db import delete_run_record, get_run_record, list_run_records
 
 router = APIRouter()
 
@@ -175,6 +176,26 @@ def get_run(run_id: str):
         metrics=record.get("metrics"),
         config=record.get("config")
     )
+
+
+@router.delete("/runs/{run_id}")
+def delete_run(run_id: str):
+    """Delete a completed or failed run and its generated artifacts."""
+    job = job_manager.get_job(run_id)
+    if job and job.status in ["QUEUED", "RUNNING"]:
+        raise HTTPException(status_code=409, detail="Running runs cannot be deleted.")
+
+    record = get_run_record(run_id)
+    if not record and not job:
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found.")
+
+    run_dir = settings.get_runs_dir() / run_id
+    if run_dir.exists():
+        shutil.rmtree(run_dir)
+    delete_run_record(run_id)
+    if job:
+        job_manager.jobs.pop(run_id, None)
+    return {"message": f"Run {run_id} deleted."}
 
 
 @router.get("/runs/{run_id}/events")

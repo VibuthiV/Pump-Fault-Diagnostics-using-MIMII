@@ -1,7 +1,6 @@
 """
 Health & Capabilities API Endpoints.
 """
-import os
 import torch
 from pathlib import Path
 from fastapi import APIRouter
@@ -59,7 +58,6 @@ def get_datasets():
         p = Path(r).resolve()
         if (p / "manifest.csv").exists() or p.name == "manifest.csv":
             try:
-                manifest_path = p / "manifest.csv" if p.is_dir() else p
                 df = load_manifest(str(p if p.is_dir() else p.parent))
                 val = validate_manifest(df)
                 datasets.append({

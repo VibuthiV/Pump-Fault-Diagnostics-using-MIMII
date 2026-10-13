@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { HealthData, CapabilitiesData, RunConfig, ValidateResponse, RunStatus } from './types';
-import { fetchHealth, fetchCapabilities, createRun, fetchRuns } from './services/api';
+import type { HealthData, RunConfig, ValidateResponse, RunStatus } from './types';
+import { fetchHealth, createRun, fetchRuns } from './services/api';
 
 import { Navbar } from './components/layout/Navbar';
 import { ProjectOverview } from './components/overview/ProjectOverview';
@@ -15,7 +15,6 @@ import { RunHistoryPage } from './components/history/RunHistoryPage';
 export function App() {
   const [currentTab, setCurrentTab] = useState<string>('overview');
   const [health, setHealth] = useState<HealthData | null>(null);
-  const [capabilities, setCapabilities] = useState<CapabilitiesData | null>(null);
   const [latestRun, setLatestRun] = useState<RunStatus | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [predictionsFilter, setPredictionsFilter] = useState<any>(null);
@@ -37,13 +36,11 @@ export function App() {
 
   const loadHealthAndHistory = async () => {
     try {
-      const [h, cap, runs] = await Promise.all([
+      const [h, runs] = await Promise.all([
         fetchHealth(),
-        fetchCapabilities(),
         fetchRuns()
       ]);
       setHealth(h);
-      setCapabilities(cap);
       if (runs.length > 0) {
         setLatestRun(runs[0]);
         if (!selectedRunId) {
@@ -169,7 +166,6 @@ export function App() {
       {/* Modal 1: Configuration Form */}
       {showConfigForm && (
         <RunConfigForm
-          capabilities={capabilities}
           onValidateSuccess={handleValidateSuccess}
           onClose={() => setShowConfigForm(false)}
         />

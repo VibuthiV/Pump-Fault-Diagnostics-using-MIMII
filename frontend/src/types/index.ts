@@ -31,6 +31,14 @@ export interface RunConfig {
   seed?: number;
 }
 
+export interface AudioPrediction {
+  filename: string;
+  predicted_label: number;
+  predicted_status: 'normal' | 'abnormal';
+  abnormal_probability: number;
+  threshold: number;
+}
+
 export interface ValidateResponse {
   valid: boolean;
   warnings: string[];

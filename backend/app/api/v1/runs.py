@@ -6,9 +6,9 @@ import asyncio
 import shutil
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import settings
@@ -18,8 +18,57 @@ from app.schemas.pipeline import (
 from app.pipeline.dataset import load_manifest, validate_manifest
 from app.jobs.manager import job_manager
 from app.storage.db import delete_run_record, get_run_record, list_run_records
+from app.pipeline.audio import audio_to_log_mel
+from app.pipeline.model import SpecOnlyModel
+import torch
+import torch.nn.functional as F
+from app.schemas.pipeline import AudioPredictionResponse
 
 router = APIRouter()
+
+
+@router.post("/audio/predict", response_model=AudioPredictionResponse)
+async def predict_uploaded_audio(audio: UploadFile = File(...), threshold: float = 0.5):
+    """Predict the anomaly status of one uploaded PCM WAV clip."""
+    if not audio.filename:
+        raise HTTPException(status_code=400, detail="Select an audio file to test.")
+    if not audio.filename.lower().endswith(".wav"):
+        raise HTTPException(status_code=400, detail="Only PCM WAV audio files are supported.")
+    if not 0.0 <= threshold <= 1.0:
+        raise HTTPException(status_code=400, detail="Threshold must be between 0 and 1.")
+
+    contents = await audio.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="The uploaded audio file is empty.")
+
+    try:
+        spec = audio_to_log_mel(contents, str(settings.get_dataset_root()))
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model_config = {"n_mels": 128, "embed_dim_spec": 96, "fused_dim": 128}
+        model = SpecOnlyModel(model_config).to(device)
+        checkpoint_path = settings.get_checkpoint_path()
+        if not checkpoint_path.exists():
+            raise HTTPException(status_code=503, detail="No model checkpoint is available for audio prediction.")
+        model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+        model.eval()
+        with torch.no_grad():
+            probabilities = F.softmax(model(spec.to(device)), dim=1)[0]
+        abnormal_probability = float(probabilities[1].item())
+        predicted_label = int(abnormal_probability >= threshold)
+    except HTTPException:
+        raise
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except (OSError, RuntimeError) as exc:
+        raise HTTPException(status_code=422, detail=f"Audio prediction failed: {exc}") from exc
+
+    return AudioPredictionResponse(
+        filename=audio.filename,
+        predicted_label=predicted_label,
+        predicted_status="abnormal" if predicted_label else "normal",
+        abnormal_probability=round(abnormal_probability, 6),
+        threshold=threshold,
+    )
 
 
 @router.post("/runs/validate", response_model=RunValidateResponse)
@@ -92,7 +141,7 @@ def validate_run_config(req: RunValidateRequest):
 
 
 @router.post("/runs", response_model=RunStatusResponse)
-async def create_run(req: RunCreateRequest, request: Request):
+async def create_run(req: RunCreateRequest):
     """Create and start a new background execution run after explicit frontend confirmation."""
     timestamp = int(time.time())
     run_id = f"run_{timestamp}"

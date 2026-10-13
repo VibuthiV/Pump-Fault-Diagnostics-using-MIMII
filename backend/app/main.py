@@ -15,7 +15,7 @@ from app.api.v1.compare import router as compare_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     # Startup initialization
     init_db()
     settings.get_output_dir()

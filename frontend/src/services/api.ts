@@ -1,7 +1,7 @@
 import type {
   HealthData, CapabilitiesData, RunConfig, ValidateResponse,
   RunStatus, MetricsData, RocData, PrData, GroupBreakdown,
-  MachineSnrMatrix, DiagnosticReport
+  MachineSnrMatrix, DiagnosticReport, AudioPrediction
 } from '../types';
 
 const API_BASE = '/api/v1';
@@ -37,6 +37,20 @@ export async function createRun(config: RunConfig): Promise<RunStatus> {
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || 'Failed to start evaluation run');
+  }
+  return res.json();
+}
+
+export async function predictUploadedAudio(file: File, threshold = 0.5): Promise<AudioPrediction> {
+  const formData = new FormData();
+  formData.append('audio', file);
+  const res = await fetch(`${API_BASE}/audio/predict?threshold=${threshold}`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.detail || 'Failed to predict uploaded audio');
   }
   return res.json();
 }

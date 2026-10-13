@@ -2,7 +2,6 @@
 ML Model definitions — extracted directly from the notebook.
 Preserves the exact SpecOnlyModel / CRNNEncoder architecture.
 """
-import torch
 import torch.nn as nn
 
 

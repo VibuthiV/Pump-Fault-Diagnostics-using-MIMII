@@ -3,7 +3,7 @@ Evaluation metrics calculation module.
 Computes ROC-AUC, accuracy, precision, recall, F1, specificity, confusion matrix,
 ROC curve, PR curve, machine breakdown, SNR breakdown, and Machine x SNR breakdown.
 """
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (

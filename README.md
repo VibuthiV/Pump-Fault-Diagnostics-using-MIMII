@@ -103,12 +103,13 @@ The Vite development server proxies `/api` requests to the backend on port 8000.
 
 1. Open the dashboard.
 2. Select **Configure & Run Evaluation**.
-3. Select **Run Test Cases**.
-4. Confirm the test-split checkpoint evaluation.
-5. Monitor the live SSE progress view.
+3. Select **Run Test Cases** to evaluate the complete test split, or select **Upload Audio and Test** to classify one PCM WAV pump-noise clip.
+4. For a test-case run, confirm the test-split checkpoint evaluation.
+5. Monitor the live SSE progress view for a test-case run.
 6. Open the results dashboard when the run completes.
 
 The default web workflow evaluates the `test` split with the existing checkpoint, threshold `0.5`, and Groq reports enabled when `GROQ_API_KEY` is configured.
+Uploaded audio is supported as PCM WAV and is predicted immediately using the existing checkpoint; it does not create a test-case run or add run-history artifacts.
 
 ## Output Artifacts
 

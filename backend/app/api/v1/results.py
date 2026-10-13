@@ -4,14 +4,14 @@ Returns metrics, predictions, ROC/PR curves, breakdowns, reports, and downloadab
 """
 import json
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse, HTMLResponse
 
 from app.config import settings
-from app.evaluation.metrics import compute_metrics, compute_group_breakdown, compute_matrix_breakdown
+from app.evaluation.metrics import compute_metrics
 
 router = APIRouter()
 

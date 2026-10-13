@@ -49,6 +49,14 @@ class RunStatusResponse(BaseModel):
     config: Optional[Dict[str, Any]] = None
 
 
+class AudioPredictionResponse(BaseModel):
+    filename: str
+    predicted_label: int
+    predicted_status: str
+    abnormal_probability: float
+    threshold: float
+
+
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str = "1.0.0"

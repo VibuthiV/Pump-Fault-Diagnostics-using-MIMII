@@ -3,11 +3,8 @@ Diagnostic Reporting Module (Stage 3 & Stage 4).
 Preserves TF-IDF knowledge base retrieval, rule-based decision logic,
 representative case selection, and Groq LLM explanation generation.
 """
-import os
-import json
 from typing import Dict, List, Tuple, Any, Optional
 
-import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity

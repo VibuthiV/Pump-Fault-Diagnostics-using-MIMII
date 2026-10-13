@@ -5,8 +5,6 @@ Preserves SpecDataset, eval_collate, manifest loading, and path rewriting.
 import os
 import glob
 from pathlib import Path
-from typing import Optional
-
 import numpy as np
 import pandas as pd
 import torch

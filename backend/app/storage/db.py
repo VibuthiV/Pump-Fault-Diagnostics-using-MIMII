@@ -1,9 +1,8 @@
 """
 SQLite database storage layer for persistent run history and metadata.
 """
-import sqlite3
 import json
-from pathlib import Path
+import sqlite3
 from typing import Dict, List, Any, Optional
 from app.config import settings
 

@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, AsyncGenerator
 import concurrent.futures
 
 from app.pipeline.runner import run_pipeline
-from app.storage.db import save_run_record, get_run_record
+from app.storage.db import save_run_record
 
 
 class JobState:

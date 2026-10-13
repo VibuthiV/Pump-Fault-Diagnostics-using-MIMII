@@ -3,11 +3,9 @@ End-to-End Pipeline Runner module.
 Extracted and refactored from end-to-end-pipeline-refined.ipynb.
 Callable via run_pipeline(config, progress_callback).
 """
-import os
 import json
 import time
 
-from pathlib import Path
 from typing import Dict, Any, Callable, Optional
 import numpy as np
 import pandas as pd
@@ -15,7 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, WeightedRandomSampler
-from sklearn.metrics import roc_auc_score, accuracy_score
+from sklearn.metrics import roc_auc_score
 
 from app.config import settings
 from app.pipeline.model import SpecOnlyModel
